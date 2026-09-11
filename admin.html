@@ -1308,7 +1308,264 @@ function escapeHtml(value){
     }
 
 })();
+/* CUSTOMER SERVICE CHAT */
 
+const chatStyle = document.createElement("style");
+
+chatStyle.textContent = `
+#teeChatButton{
+  position:fixed;
+  right:15px;
+  bottom:15px;
+  z-index:9999;
+  background:#000;
+  color:#fff;
+  border:0;
+  border-radius:30px;
+  padding:15px 18px;
+  font-weight:bold;
+  box-shadow:0 4px 15px #0004;
+}
+
+#teeChatBox{
+  display:none;
+  position:fixed;
+  right:15px;
+  bottom:75px;
+  width:320px;
+  height:450px;
+  max-width:90%;
+  background:#fff;
+  z-index:10000;
+  border-radius:18px;
+  box-shadow:0 5px 30px #0005;
+  overflow:hidden;
+}
+
+#teeChatHeader{
+  background:#000;
+  color:#fff;
+  padding:16px;
+  font-weight:bold;
+  display:flex;
+  justify-content:space-between;
+}
+
+#teeChatMessages{
+  height:350px;
+  padding:10px;
+  overflow-y:auto;
+  background:#f5f5f5;
+}
+
+.teeChatMessage{
+  padding:9px 12px;
+  margin:6px 0;
+  border-radius:14px;
+  max-width:75%;
+  word-wrap:break-word;
+}
+
+.teeCustomerMessage{
+  margin-left:auto;
+  background:#000;
+  color:#fff;
+}
+
+.teeAdminMessage{
+  background:#fff;
+  color:#111;
+}
+
+#teeChatForm{
+  display:flex;
+  padding:8px;
+  background:#fff;
+}
+
+#teeChatInput{
+  flex:1;
+  padding:10px;
+  border:1px solid #ccc;
+  border-radius:20px;
+  outline:none;
+}
+
+#teeChatSend{
+  border:0;
+  background:#000;
+  color:#fff;
+  border-radius:50%;
+  width:42px;
+  margin-left:5px;
+}
+`;
+
+document.head.appendChild(chatStyle);
+
+document.body.insertAdjacentHTML("beforeend", `
+<button id="teeChatButton">💬 Customer Service</button>
+
+<div id="teeChatBox">
+
+  <div id="teeChatHeader">
+    <span>Customer Service</span>
+    <span id="teeChatClose" style="cursor:pointer;">×</span>
+  </div>
+
+  <div id="teeChatMessages"></div>
+
+  <form id="teeChatForm">
+    <input
+      id="teeChatInput"
+      type="text"
+      placeholder="Type your message..."
+      autocomplete="off"
+      required
+    >
+    <button id="teeChatSend" type="submit">➤</button>
+  </form>
+
+</div>
+`);
+
+let teeChatId = localStorage.getItem("tee_chat");
+
+async function getTeeChat(){
+
+  if(teeChatId){
+    return teeChatId;
+  }
+
+  let visitorId = localStorage.getItem("teephone_visitor_id");
+
+  if(!visitorId){
+    visitorId = crypto.randomUUID();
+    localStorage.setItem("teephone_visitor_id", visitorId);
+  }
+
+  const { data, error } = await db
+    .from("chat_conversations")
+    .insert({
+      visitor_id: visitorId
+    })
+    .select("id")
+    .single();
+
+  if(error){
+    console.error("Chat error:", error);
+    return null;
+  }
+
+  teeChatId = data.id;
+
+  localStorage.setItem("tee_chat", teeChatId);
+
+  return teeChatId;
+}
+
+async function loadTeeChat(){
+
+  const chatId = await getTeeChat();
+
+  if(!chatId) return;
+
+  const { data, error } = await db
+    .from("chat_messages")
+    .select("*")
+    .eq("conversation_id", chatId)
+    .order("created_at", { ascending:true });
+
+  if(error){
+    console.error("Message error:", error);
+    return;
+  }
+
+  const box = document.getElementById("teeChatMessages");
+
+  box.innerHTML = "";
+
+  (data || []).forEach(item => {
+
+    const message = document.createElement("div");
+
+    message.className =
+      "teeChatMessage " +
+      (item.sender === "customer"
+        ? "teeCustomerMessage"
+        : "teeAdminMessage");
+
+    message.textContent = item.message;
+
+    box.appendChild(message);
+
+  });
+
+  box.scrollTop = box.scrollHeight;
+}
+
+document.getElementById("teeChatButton").onclick = async function(){
+
+  document.getElementById("teeChatBox").style.display = "block";
+
+  await loadTeeChat();
+
+};
+
+document.getElementById("teeChatClose").onclick = function(){
+
+  document.getElementById("teeChatBox").style.display = "none";
+
+};
+
+document.getElementById("teeChatForm").onsubmit = async function(e){
+
+  e.preventDefault();
+
+  const input = document.getElementById("teeChatInput");
+
+  const message = input.value.trim();
+
+  if(!message) return;
+
+  const chatId = await getTeeChat();
+
+  if(!chatId) return;
+
+  const { error } = await db
+    .from("chat_messages")
+    .insert({
+      conversation_id: chatId,
+      sender: "customer",
+      message: message
+    });
+
+  if(error){
+
+    console.error("Send message error:", error);
+
+    alert("Unable to send message. Please try again.");
+
+    return;
+  }
+
+  input.value = "";
+
+  await loadTeeChat();
+
+};
+
+setInterval(function(){
+
+  const chatBox = document.getElementById("teeChatBox");
+
+  if(chatBox && chatBox.style.display === "block"){
+    loadTeeChat();
+  }
+
+}, 3000);
+
+/* END CUSTOMER SERVICE CHAT */
 </script>
 
 </body>
