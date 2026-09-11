@@ -1048,45 +1048,27 @@
 
         /* CREATE ORDER */
 
-        const { data: order, error: orderError } =
-          await db
-            .from("orders")
-            .insert({
-              customer_name: customerName,
-              customer_phone: customerPhone,
-              customer_email: customerEmail || null,
-              delivery_address: deliveryAddress,
-              total_amount: total,
-              payment_status: "pending",
-              order_status: "pending"
-            })
-            .select()
-            .single();
+const itemsForRpc = cart.map(item => ({
+    product_id: item.id,
+    quantity: item.quantity
+}));
 
-        if (orderError) {
-          throw orderError;
-        }
+const { data: orderId, error: orderError } =
+    await db.rpc("create_customer_order", {
+        p_customer_name: customerName,
+        p_customer_phone: customerPhone,
+        p_customer_email: customerEmail || "",
+        p_delivery_address: deliveryAddress,
+        p_items: itemsForRpc
+    });
 
+if (orderError) {
+    throw orderError;
+}
 
-        /* CREATE ORDER ITEMS */
-
-        const orderItems =
-          cart.map(item => ({
-            order_id: order.id,
-            product_id: item.id,
-            product_name: item.name,
-            quantity: item.quantity,
-            unit_price: item.price
-          }));
-
-        const { error: itemError } =
-          await db
-            .from("order_items")
-            .insert(orderItems);
-
-        if (itemError) {
-          throw itemError;
-        }
+const order = {
+    id: orderId
+};
 
 
         /* SUCCESS */
