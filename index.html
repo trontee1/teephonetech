@@ -1140,7 +1140,65 @@ const order = {
 
   loadCart();
   loadProducts();
+const chatStyle=document.createElement("style");
+chatStyle.textContent=`#csb{position:fixed;right:15px;bottom:15px;z-index:9999;background:#000;color:#fff;border:0;border-radius:30px;padding:15px;font-weight:bold}#csc{display:none;position:fixed;right:15px;bottom:75px;width:320px;height:450px;max-width:90%;background:#fff;z-index:10000;border-radius:18px;box-shadow:0 5px 30px #0005;overflow:hidden}#csh{background:#000;color:#fff;padding:16px;font-weight:bold;display:flex;justify-content:space-between}#csm{height:350px;padding:12px;overflow:auto;background:#f5f5f5}.cm{padding:9px 12px;margin:6px;border-radius:14px;max-width:75%}.cc{margin-left:auto;background:#000;color:#fff}.ca{background:#fff}#csf{display:flex;padding:8px}#csi{flex:1;padding:10px;border:1px solid #ccc;border-radius:20px}#css{border:0;background:#000;color:#fff;border-radius:50%;width:42px;margin-left:5px}`;
+document.head.appendChild(chatStyle);
 
+document.body.insertAdjacentHTML("beforeend",`<button id="csb">💬 Customer Service</button><div id="csc"><div id="csh">Customer Service <span id="cx">×</span></div><div id="csm"></div><form id="csf"><input id="csi" placeholder="Type your message..." required><button id="css">➤</button></form></div>`);
+
+let chatId=localStorage.getItem("tee_chat");
+
+async function getChat(){
+ if(chatId)return chatId;
+ const visitor=localStorage.getItem("teephone_visitor_id")||crypto.randomUUID();
+ localStorage.setItem("teephone_visitor_id",visitor);
+ const {data,error}=await db.from("chat_conversations").insert({visitor_id:visitor}).select("id").single();
+ if(error)return null;
+ chatId=data.id;
+ localStorage.setItem("tee_chat",chatId);
+ return chatId;
+}
+
+async function showChat(){
+ const id=await getChat();
+ if(!id)return;
+ const {data}=await db.from("chat_messages").select("*").eq("conversation_id",id).order("created_at");
+ const box=document.getElementById("csm");
+ box.innerHTML="";
+ (data||[]).forEach(x=>{
+   const d=document.createElement("div");
+   d.className="cm "+(x.sender==="customer"?"cc":"ca");
+   d.textContent=x.message;
+   box.appendChild(d);
+ });
+ box.scrollTop=box.scrollHeight;
+}
+
+csb.onclick=async()=>{
+ csc.style.display="block";
+ await showChat();
+};
+
+cx.onclick=()=>csc.style.display="none";
+
+csf.onsubmit=async e=>{
+ e.preventDefault();
+ const input=document.getElementById("csi");
+ const msg=input.value.trim();
+ if(!msg)return;
+ const id=await getChat();
+ await db.from("chat_messages").insert({
+   conversation_id:id,
+   sender:"customer",
+   message:msg
+ });
+ input.value="";
+ await showChat();
+};
+
+setInterval(()=>{
+ if(csc.style.display==="block")showChat();
+},3000);
 </script>
 
 </body>
