@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teephonetech | Phones & Gadgets</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+html{scroll-behavior:smooth}
+body{background:#f5f5f7;color:#111}
+
+header{
+background:#000;color:#fff;padding:18px 6%;
+display:flex;align-items:center;justify-content:space-between;
+position:sticky;top:0;z-index:1000
+}
+
+.logo{font-size:24px;font-weight:800}
+nav{display:flex;gap:25px}
+nav a{color:#fff;text-decoration:none}
+
+.cart-button{
+background:#fff;color:#000;border:0;padding:10px 17px;
+border-radius:25px;font-weight:bold;cursor:pointer
+}
+
+.hero{
+min-height:500px;
+background:linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.8)),
+linear-gradient(135deg,#111,#333);
+color:#fff;display:flex;align-items:center;
+justify-content:center;text-align:center;padding:60px 20px
+}
+
+.hero-content{max-width:750px}
+.hero h1{font-size:clamp(40px,7vw,75px);margin-bottom:20px}
+.hero p{font-size:19px;color:#ddd;line-height:1.6;margin-bottom:30px}
+
+.shop-btn{
+display:inline-block;background:#fff;color:#000;
+text-decoration:none;padding:15px 30px;
+border-radius:30px;font-weight:bold
+}
+
+.products-section{padding:70px 6%}
+
+.section-heading{text-align:center;margin-bottom:40px}
+.section-heading h2{font-size:38px;margin-bottom:10px}
+.section-heading p{color:#666}
+
+.categories{
+display:flex;justify-content:center;gap:10px;
+flex-wrap:wrap;margin-bottom:35px
+}
+
+.category{
+border:1px solid #ddd;background:#fff;
+padding:10px 20px;border-radius:25px;cursor:pointer
+}
+
+.category.active,.category:hover{
+background:#000;color:#fff
+}
+
+.product-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:25px
+}
+
+.product{
+background:#fff;border-radius:18px;padding:18px;
+box-shadow:0 5px 25px rgba(0,0,0,.07);
+transition:.25s
+}
+
+.product:hover{transform:translateY(-5px)}
+
+.product-image{
+height:250px;background:#f1f1f1;
+border-radius:14px;display:flex;
+align-items:center;justify-content:center;
+font-size:90px;margin-bottom:20px
+}
+
+.product h3{font-size:21px;margin-bottom:8px}
+.product p{color:#777;font-size:14px;margin-bottom:10px}
+
+.price{
+font-size:22px;font-weight:800;margin-bottom:15px
+}
+
+.add-cart{
+width:100%;padding:13px;background:#000;
+color:#fff;border:0;border-radius:9px;
+cursor:pointer;font-weight:bold
+}
+
+.cart-overlay{
+display:none;position:fixed;inset:0;
+background:rgba(0,0,0,.5);z-index:1999
+}
+
+.cart-overlay.show{display:block}
+
+.cart{
+position:fixed;top:0;right:-450px;
+width:430px;max-width:100%;height:100%;
+background:#fff;z-index:2000;padding:25px;
+overflow-y:auto;transition:.3s
+}
+
+.cart.open{right:0}
+
+.cart-header{
+display:flex;justify-content:space-between;
+align-items:center;margin-bottom:25px
+}
+
+.close-cart{font-size:30px;cursor:pointer}
+
+.cart-item{
+border-bottom:1px solid #eee;padding:17px 0;
+display:flex;justify-content:space-between;gap:15px
+}
+
+.cart-item-info h4{margin-bottom:6px}
+.cart-item-info p{color:#666}
+
+.remove{
+border:0;background:#eee;padding:7px 10px;
+border-radius:6px;cursor:pointer
+}
+
+.cart-total{
+font-size:22px;font-weight:bold;margin:25px 0
+}
+
+.checkout{
+border-top:1px solid #ddd;padding-top:25px
+}
+
+.checkout h3{margin-bottom:15px}
+
+.checkout input,.checkout textarea{
+width:100%;padding:13px;border:1px solid #ddd;
+border-radius:8px;margin-bottom:12px;outline:none
+}
+
+.order-button{
+width:100%;padding:15px;border:0;
+border-radius:9px;background:#25D366;
+color:#fff;font-size:16px;font-weight:bold;
+cursor:pointer
+}
+
+.contact{
+padding:70px 6%;background:#fff;text-align:center
+}
+
+.contact h2{font-size:35px;margin-bottom:15px}
+.contact p{color:#666;margin-bottom:25px}
+
+.whatsapp{
+display:inline-block;background:#25D366;
+color:#fff;text-decoration:none;padding:14px 25px;
+border-radius:30px;font-weight:bold
+}
+
+footer{
+background:#000;color:#fff;text-align:center;
+padding:30px 15px
+}
+
+footer p{color:#aaa;margin-top:8px}
+
+@media(max-width:600px){
+header{padding:15px 4%}
+.logo{font-size:19px}
+nav{display:none}
+.hero{min-height:450px}
+.hero p{font-size:16px}
+.products-section{padding:50px 4%}
+.section-heading h2{font-size:30px}
+.product-image{height:220px}
+.cart{width:100%}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">Teephonetech</div>
+
+<nav>
+<a href="#home">Home</a>
+<a href="#phones">Phones</a>
+<a href="#contact">Contact</a>
+</nav>
+
+<button class="cart-button" onclick="openCart()">
+🛒 Cart (<span id="cartCount">0</span>)
+</button>
+
+</header>
+
+
+<section class="hero" id="home">
+
+<div class="hero-content">
+
+<h1>Teephonetech</h1>
+
+<p>
+Your trusted plug for iPhones, Samsung phones
+and quality gadgets.
+</p>
+
+<a href="#phones" class="shop-btn">
+Shop Phones
+</a>
+
+</div>
+
+</section>
+
+
+<section class="products-section" id="phones">
+
+<div class="section-heading">
+
+<h2>Shop Our Phones</h2>
+
+<p>Choose your phone and add it to your cart.</p>
+
+</div>
+
+
+<div class="categories">
+
+<button class="category active"
+onclick="filterProducts('all',this)">
+All
+</button>
+
+<button class="category"
+onclick="filterProducts('iphone',this)">
+iPhone
+</button>
+
+<button class="category"
+onclick="filterProducts('samsung',this)">
+Samsung
+</button>
+
+<button class="category"
+onclick="filterProducts('other',this)">
+Other
+</button>
+
+</div>
+
+
+<div class="product-grid">
+
+
+<div class="product" data-category="iphone">
+
+<div class="product-image">📱</div>
+
+<h3>iPhone 13</h3>
+
+<p>Apple iPhone 13</p>
+
+<div class="price">₦100</div>
+
+<button class="add-cart"
+onclick="addToCart('iPhone 13',100)">
+Add to Cart
+</button>
+
+</div>
+
+
+<div class="product" data-category="iphone">
+
+<div class="product-image">📱</div>
+
+<h3>iPhone 14</h3>
+
+<p>Apple iPhone 14</p>
+
+<div class="price">₦200</div>
+
+<button class="add-cart"
+onclick="addToCart('iPhone 14',200)">
+Add to Cart
+</button>
+
+</div>
+
+
+<div class="product" data-category="iphone">
+
+<div class="product-image">📱</div>
+
+<h3>iPhone 15</h3>
+
+<p>Apple iPhone 15</p>
+
+<div class="price">₦300</div>
+
+<button class="add-cart"
+onclick="addToCart('iPhone 15',300)">
+Add to Cart
+</button>
+
+</div>
+
+
+<div class="product" data-category="iphone">
+
+<div class="product-image">📱</div>
+
+<h3>iPhone 16</h3>
+
+<p>Apple iPhone 16</p>
+
+<div class="price">₦400</div>
+
+<button class="add-cart"
+onclick="addToCart('iPhone 16',400)">
+Add to Cart
+</button>
+
+</div>
+
+
+<div class="product" data-category="iphone">
+
+<div class="product-image">📱</div>
+
+<h3>iPhone 17</h3>
+
+<p>Apple iPhone 17</p>
+
+<div class="price">₦500</div>
+
+<button class="add-cart"
+onclick="addToCart('iPhone 17',500)">
+Add to Cart
+</button>
+
+</div>
+
+
+<div class="product" data-category="samsung">
+
+<div class="product-image">📱</div>
+
+<h3>Samsung Galaxy</h3>
+
+<p>Samsung smartphones</p>
+
+<div class="price">Contact Us</div>
+
+<button class="add-cart"
+onclick="addToCart('Samsung Galaxy',0)">
+Add to Cart
+</button>
+
+</div>
+
+
+<div class="product" data-category="other">
+
+<div class="product-image">📱</div>
+
+<h3>Other Phones</h3>
+
+<p>Other phone brands available</p>
+
+<div class="price">Contact Us</div>
+
+<button class="add-cart"
+onclick="addToCart('Other Phone',0)">
+Add to Cart
+</button>
+
+</div>
+
+
+<div class="product" data-category="other">
+
+<div class="product-image">🎧</div>
+
+<h3>Gadgets</h3>
+
+<p>Accessories & gadgets</p>
+
+<div class="price">Contact Us</div>
+
+<button class="add-cart"
+onclick="addToCart('Gadget',0)">
+Add to Cart
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+
+<div class="cart-overlay"
+id="cartOverlay"
+onclick="closeCart()">
+</div>
+
+
+<div class="cart" id="cart">
+
+<div class="cart-header">
+
+<h2>Your Cart</h2>
+
+<span class="close-cart"
+onclick="closeCart()">×</span>
+
+</div>
+
+
+<div id="cartItems">
+<p>Your cart is empty.</p>
+</div>
+
+
+<div class="cart-total">
+Total: ₦<span id="cartTotal">0</span>
+</div>
+
+
+<div class="checkout">
+
+<h3>Delivery Details</h3>
+
+<br>
+
+<input
+type="text"
+id="customerName"
+placeholder="Full Name">
+
+<input
+type="tel"
+id="customerPhone"
+placeholder="Phone Number">
+
+<textarea
+id="customerAddress"
+rows="4"
+placeholder="Delivery Address"></textarea>
+
+<button class="order-button"
+onclick="placeOrder()">
+
+💬 Place Order on WhatsApp
+
+</button>
+
+</div>
+
+</div>
+
+
+<section class="contact" id="contact">
+
+<h2>Need Help?</h2>
+
+<p>
+Contact Teephonetech directly for phones,
+gadgets and availability.
+</p>
+
+<a
+class="whatsapp"
+href="https://wa.me/2348109742099"
+target="_blank">
+
+💬 WhatsApp Teephonetech
+
+</a>
+
+</section>
+
+
+<footer>
+
+<h3>Teephonetech</h3>
+
+<p>Phones • Gadgets • Accessories</p>
+
+<p>© 2026 Teephonetech</p>
+
+</footer>
+
+
+<script>
+
+let cart = [];
+
+
+function addToCart(name,price){
+
+cart.push({
+name:name,
+price:price
+});
+
+updateCart();
+
+openCart();
+
+}
+
+
+function updateCart(){
+
+const cartItems =
+document.getElementById("cartItems");
+
+const cartCount =
+document.getElementById("cartCount");
+
+const cartTotal =
+document.getElementById("cartTotal");
+
+cartItems.innerHTML="";
+
+let total=0;
+
+
+if(cart.length===0){
+
+cartItems.innerHTML=
+"<p>Your cart is empty.</p>";
+
+}
+
+
+cart.forEach((item,index)=>{
+
+total += item.price;
+
+cartItems.innerHTML += `
+
+<div class="cart-item">
+
+<div class="cart-item-info">
+
+<h4>${item.name}</h4>
+
+<p>
+${
+item.price===0
+? "Contact us"
+: "₦"+item.price
+}
+</p>
+
+</div>
+
+<button
+class="remove"
+onclick="removeItem(${index})">
+
+Remove
+
+</button>
+
+</div>
+
+`;
+
+});
+
+
+cartCount.innerText=cart.length;
+
+cartTotal.innerText=total;
+
+}
+
+
+function removeItem(index){
+
+cart.splice(index,1);
+
+updateCart();
+
+}
+
+
+function openCart(){
+
+document
+.getElementById("cart")
+.classList.add("open");
+
+document
+.getElementById("cartOverlay")
+.classList.add("show");
+
+}
+
+
+function closeCart(){
+
+document
+.getElementById("cart")
+.classList.remove("open");
+
+document
+.getElementById("cartOverlay")
+.classList.remove("show");
+
+}
+
+
+function filterProducts(category,button){
+
+const products =
+document.querySelectorAll(".product");
+
+const buttons =
+document.querySelectorAll(".category");
+
+
+buttons.forEach(btn=>{
+btn.classList.remove("active");
+});
+
+button.classList.add("active");
+
+
+products.forEach(product=>{
+
+if(
+category==="all" ||
+product.dataset.category===category
+){
+
+product.style.display="block";
+
+}else{
+
+product.style.display="none";
+
+}
+
+});
+
+}
+
+
+function placeOrder(){
+
+if(cart.length===0){
+
+alert("Your cart is empty.");
+
+return;
+
+}
+
+
+const name =
+document.getElementById("customerName")
+.value.trim();
+
+const phone =
+document.getElementById("customerPhone")
+.value.trim();
+
+const address =
+document.getElementById("customerAddress")
+.value.trim();
+
+
+if(!name || !phone || !address){
+
+alert(
+"Please enter your name, phone number and delivery address."
+);
+
+return;
+
+}
+
+
+let orderText="";
+
+let total=0;
+
+
+cart.forEach(item=>{
+
+orderText +=
+"• "+item.name+" - ₦"+item.price+"\n";
+
+total += item.price;
+
+});
+
+
+const message =
+
+`Hello Teephonetech 👋
+
+I want to place an order.
+
+CUSTOMER DETAILS
+
+Name: ${name}
+Phone: ${phone}
+Address: ${address}
+
+ORDER
+
+${orderText}
+
+TOTAL: ₦${total}
+
+Please confirm availability and delivery details.`;
+
+
+const whatsappNumber="2348109742099";
+
+
+const whatsappURL=
+"https://wa.me/"+
+whatsappNumber+
+"?text="+
+encodeURIComponent(message);
+
+
+window.open(
+whatsappURL,
+"_blank"
+);
+
+}
+
+</script>
+
+</body>
+</html>
