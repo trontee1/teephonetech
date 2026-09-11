@@ -1198,7 +1198,62 @@ csf.onsubmit=async e=>{
 
 setInterval(()=>{
  if(csc.style.display==="block")showChat();
-},3000);
+},3000);/* CONNECT CUSTOMER CHAT TO AI */
+
+csf.onsubmit = async e => {
+
+  e.preventDefault();
+
+  const input = document.getElementById("teeChatInput");
+  const msg = input.value.trim();
+
+  if (!msg) return;
+
+  const id = await getChat();
+
+  if (!id) return;
+
+  /* Save customer message */
+
+  const { error: messageError } = await db
+    .from("chat_messages")
+    .insert({
+      conversation_id: id,
+      sender: "customer",
+      message: msg
+    });
+
+  if (messageError) {
+    console.error("Message error:", messageError);
+    alert("Unable to send message. Please try again.");
+    return;
+  }
+
+  input.value = "";
+
+  await showChat();
+
+  /* Ask AI */
+
+  const { data, error } = await db.functions.invoke(
+    "clever-endpoint",
+    {
+      body: {
+        conversation_id: id
+      }
+    }
+  );
+
+  if (error) {
+    console.error("AI error:", error);
+    return;
+  }
+
+  await showChat();
+
+};
+
+/* END AI CONNECTION */
 </script>
 
 </body>
