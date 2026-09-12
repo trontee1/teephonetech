@@ -1566,7 +1566,352 @@ setInterval(function(){
 }, 3000);
 
 /* END CUSTOMER SERVICE CHAT */
-</script>
+/* ADMIN CUSTOMER SERVICE */
+
+const adminChatStyle = document.createElement("style");
+
+adminChatStyle.textContent = `
+#adminChatButton{
+  position:fixed;
+  left:15px;
+  bottom:15px;
+  z-index:9999;
+  background:#111;
+  color:#fff;
+  border:0;
+  border-radius:30px;
+  padding:15px 18px;
+  font-weight:bold;
+  box-shadow:0 4px 15px #0004;
+}
+
+#adminChatBox{
+  display:none;
+  position:fixed;
+  left:15px;
+  bottom:75px;
+  width:360px;
+  max-width:92%;
+  height:520px;
+  background:#fff;
+  z-index:10000;
+  border-radius:18px;
+  box-shadow:0 5px 30px #0005;
+  overflow:hidden;
+}
+
+#adminChatHeader{
+  background:#111;
+  color:#fff;
+  padding:15px;
+  font-weight:bold;
+}
+
+#adminChatLayout{
+  display:flex;
+  height:465px;
+}
+
+#adminConversationList{
+  width:125px;
+  border-right:1px solid #ddd;
+  overflow-y:auto;
+  background:#f7f7f7;
+}
+
+.adminConversation{
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.adminConversation:hover{
+  background:#eee;
+}
+
+#adminMessagesArea{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+#adminMessages{
+  flex:1;
+  padding:10px;
+  overflow-y:auto;
+  background:#f5f5f5;
+}
+
+.adminMessage{
+  padding:9px 12px;
+  margin:6px 0;
+  border-radius:14px;
+  max-width:80%;
+  word-wrap:break-word;
+}
+
+.adminCustomerMessage{
+  background:#fff;
+  color:#111;
+}
+
+.adminReplyMessage{
+  margin-left:auto;
+  background:#111;
+  color:#fff;
+}
+
+#adminChatForm{
+  display:flex;
+  padding:8px;
+  border-top:1px solid #ddd;
+}
+
+#adminChatInput{
+  flex:1;
+  padding:10px;
+  border:1px solid #ccc;
+  border-radius:20px;
+  outline:none;
+}
+
+#adminChatSend{
+  margin-left:5px;
+  border:0;
+  background:#111;
+  color:#fff;
+  border-radius:50%;
+  width:42px;
+}
+
+#adminChatClose{
+  float:right;
+  cursor:pointer;
+  font-size:20px;
+}
+`;
+
+document.head.appendChild(adminChatStyle);
+
+document.body.insertAdjacentHTML("beforeend", `
+<button id="adminChatButton">💬 Customer Service</button>
+
+<div id="adminChatBox">
+
+  <div id="adminChatHeader">
+    Customer Service
+    <span id="adminChatClose">×</span>
+  </div>
+
+  <div id="adminChatLayout">
+
+    <div id="adminConversationList">
+      <div style="padding:10px;">Loading...</div>
+    </div>
+
+    <div id="adminMessagesArea">
+
+      <div id="adminMessages">
+        <div style="padding:15px;color:#777;">
+          Select a conversation
+        </div>
+      </div>
+
+      <form id="adminChatForm">
+        <input
+          id="adminChatInput"
+          type="text"
+          placeholder="Reply to customer..."
+          autocomplete="off"
+        >
+        <button id="adminChatSend" type="submit">➤</button>
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+`);
+
+let adminSelectedConversation = null;
+
+async function loadAdminConversations(){
+
+  const { data, error } = await db
+    .from("chat_conversations")
+    .select("*")
+    .order("updated_at", { ascending:false });
+
+  if(error){
+    console.error("Conversation error:", error);
+    return;
+  }
+
+  const list = document.getElementById("adminConversationList");
+
+  list.innerHTML = "";
+
+  if(!data || data.length === 0){
+
+    list.innerHTML = `
+      <div style="padding:10px;color:#777;">
+        No chats yet
+      </div>
+    `;
+
+    return;
+  }
+
+  data.forEach(chat => {
+
+    const item = document.createElement("div");
+
+    item.className = "adminConversation";
+
+    item.innerHTML = `
+      <b>${chat.customer_name || "Customer"}</b>
+      <br>
+      <small>${chat.status || "waiting"}</small>
+    `;
+
+    item.onclick = async function(){
+
+      adminSelectedConversation = chat.id;
+
+      await loadAdminMessages(chat.id);
+
+    };
+
+    list.appendChild(item);
+
+  });
+
+}
+
+async function loadAdminMessages(conversationId){
+
+  const { data, error } = await db
+    .from("chat_messages")
+    .select("*")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending:true });
+
+  if(error){
+
+    console.error("Message error:", error);
+
+    return;
+  }
+
+  const box = document.getElementById("adminMessages");
+
+  box.innerHTML = "";
+
+  (data || []).forEach(item => {
+
+    const message = document.createElement("div");
+
+    message.className =
+      "adminMessage " +
+      (item.sender === "admin"
+        ? "adminReplyMessage"
+        : "adminCustomerMessage");
+
+    message.textContent = item.message;
+
+    box.appendChild(message);
+
+  });
+
+  box.scrollTop = box.scrollHeight;
+
+}
+
+document.getElementById("adminChatButton").onclick = async function(){
+
+  document.getElementById("adminChatBox").style.display = "block";
+
+  await loadAdminConversations();
+
+};
+
+document.getElementById("adminChatClose").onclick = function(){
+
+  document.getElementById("adminChatBox").style.display = "none";
+
+};
+
+document.getElementById("adminChatForm").onsubmit = async function(e){
+
+  e.preventDefault();
+
+  if(!adminSelectedConversation){
+
+    alert("Select a customer conversation first.");
+
+    return;
+  }
+
+  const input = document.getElementById("adminChatInput");
+
+  const message = input.value.trim();
+
+  if(!message) return;
+
+  const { error } = await db
+    .from("chat_messages")
+    .insert({
+      conversation_id: adminSelectedConversation,
+      sender: "admin",
+      message: message
+    });
+
+  if(error){
+
+    console.error("Admin message error:", error);
+
+    alert("Unable to send message.");
+
+    return;
+  }
+
+  await db
+    .from("chat_conversations")
+    .update({
+      status: "agent",
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", adminSelectedConversation);
+
+  input.value = "";
+
+  await loadAdminMessages(adminSelectedConversation);
+
+  await loadAdminConversations();
+
+};
+
+setInterval(async function(){
+
+  const chatBox = document.getElementById("adminChatBox");
+
+  if(chatBox && chatBox.style.display === "block"){
+
+    await loadAdminConversations();
+
+    if(adminSelectedConversation){
+
+      await loadAdminMessages(adminSelectedConversation);
+
+    }
+
+  }
+
+}, 3000);
+
+/* END ADMIN CUSTOMER SERVICE */</script>
 
 </body>
 </html>
